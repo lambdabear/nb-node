@@ -2,15 +2,15 @@ use std::io;
 use std::str;
 use std::time::Duration;
 
-use serialport::prelude::*;
+// use serialport::prelude::*;
 
 fn at_command<'a>(port: &mut Box<dyn serialport::SerialPort>, cmd: &'a str) -> Result<String, ()> {
-    let mut buffer: Vec<u8> = vec![0; 100];
-    let mut res: Vec<u8> = vec![];
     match port.write(cmd.as_bytes()) {
         Ok(_) => {
-            for _ in 0..100 {
-                std::thread::sleep(Duration::from_millis(10));
+            let mut buffer: Vec<u8> = vec![0; 100];
+            let mut res: Vec<u8> = vec![];
+            for _ in 0..10 {
+                std::thread::sleep(Duration::from_millis(50));
                 match port.read(buffer.as_mut_slice()) {
                     Ok(t) => {
                         let mut cache = buffer.clone();
@@ -38,13 +38,13 @@ pub struct Node {
 
 impl Node {
     pub fn new(mut port: Box<dyn serialport::SerialPort>) -> Result<Self, ()> {
-        std::thread::sleep(Duration::from_millis(1000));
-        match at_command(&mut port, "AT+GSN\n") {
+        match at_command(&mut port, "AT+GSN\r") {
             Ok(s) => {
                 println!("{}", s);
                 let mut lines = s.lines();
                 lines.next();
                 match lines.next() {
+                    Some(s) if s == "ERROR" => Err(()),
                     Some(imei) => Ok(Node {
                         port,
                         imei: imei.to_string(),
@@ -58,5 +58,56 @@ impl Node {
 
     pub fn get_imei(&self) -> &str {
         &self.imei
+    }
+
+    pub fn register(&mut self, server: &str, port: u16, lifetime: u32) -> Result<(), ()> {
+        match at_command(
+            &mut self.port,
+            &format!(
+                "AT+CM2MCLINEW=\"{}\",{},{},{}\r",
+                server, port, self.imei, lifetime
+            ),
+        ) {
+            Ok(s) => {
+                println!("{}", s);
+                let mut lines = s.lines();
+                lines.next();
+                match lines.next() {
+                    Some(s) if s == "OK" => Ok(()),
+                    Some(_) | None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
+
+    pub fn send(&mut self, msg: &str) -> Result<(), ()> {
+        match at_command(&mut self.port, &format!("AT+CM2MCLISEND=\"{}\"\r", msg)) {
+            Ok(res) => {
+                println!("{}", res);
+                let mut lines = res.lines();
+                lines.next();
+                match lines.next() {
+                    Some(s) if s == "OK" => Ok(()),
+                    Some(_) | None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
+
+    pub fn deregister(&mut self) -> Result<(), ()> {
+        match at_command(&mut self.port, &format!("AT+CM2MCLIDEL\r")) {
+            Ok(res) => {
+                println!("{}", res);
+                let mut lines = res.lines();
+                lines.next();
+                match lines.next() {
+                    Some(s) if s == "OK" => Ok(()),
+                    Some(_) | None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
     }
 }
