@@ -60,7 +60,7 @@ impl Node {
         &self.imei
     }
 
-    pub fn register(&mut self, server: &str, port: u16, lifetime: u32) -> Result<(), ()> {
+    pub fn register(&mut self, server: &str, port: &str, lifetime: &str) -> Result<(), ()> {
         match at_command(
             &mut self.port,
             &format!(
