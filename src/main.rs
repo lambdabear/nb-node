@@ -38,6 +38,7 @@ fn main() {
         .subcommands(vec![
             SubCommand::with_name("register").about("register NB node in CT-iot cloud"),
             SubCommand::with_name("deregister").about("deregister NB node in CT-iot cloud"),
+            SubCommand::with_name("power-off").about("deregister NB node in CT-iot cloud"),
             SubCommand::with_name("send")
                 .about("send data to CT-iot cloud")
                 .arg(Arg::with_name("data").takes_value(true).required(true)),
@@ -72,6 +73,13 @@ fn main() {
                     match node.deregister() {
                         Ok(_) => println!("deregister succeed"),
                         Err(_) => println!("deregister failed"),
+                    };
+                }
+
+                if let Some(_) = matches.subcommand_matches("power-off") {
+                    match node.power_off() {
+                        Ok(_) => println!("power off succeed"),
+                        Err(_) => println!("power off failed"),
                     };
                 }
 
