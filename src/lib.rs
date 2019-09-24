@@ -117,6 +117,8 @@ impl Node {
                 println!("{}", res);
                 let mut lines = res.lines();
                 lines.next();
+                lines.next();
+                lines.next();
                 match lines.next() {
                     Some(s) if s == "OK" => Ok(()),
                     Some(_) | None => Err(()),

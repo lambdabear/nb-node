@@ -38,7 +38,7 @@ fn main() {
         .subcommands(vec![
             SubCommand::with_name("register").about("register NB node in CT-iot cloud"),
             SubCommand::with_name("deregister").about("deregister NB node in CT-iot cloud"),
-            SubCommand::with_name("power-off").about("deregister NB node in CT-iot cloud"),
+            SubCommand::with_name("power-off").about("power off NB node"),
             SubCommand::with_name("send")
                 .about("send data to CT-iot cloud")
                 .arg(Arg::with_name("data").takes_value(true).required(true)),
