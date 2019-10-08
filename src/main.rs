@@ -41,6 +41,7 @@ fn main() {
             SubCommand::with_name("enable-release-assistance").about("enable release assistance"),
             SubCommand::with_name("power-off").about("power off NB node"),
             SubCommand::with_name("signal-quality").about("signal quality report"),
+            SubCommand::with_name("disable-psm").about("disable us of PSM"),
             SubCommand::with_name("send")
                 .about("send data to CT-iot cloud")
                 .arg(Arg::with_name("data").takes_value(true).required(true)),
@@ -61,9 +62,6 @@ fn main() {
         Ok(port) => match Node::new(port) {
             Ok(mut node) => {
                 println!("create NB module succeed! imei: {}", node.get_imei());
-                // node.register("221.229.214.202", 5683, 86400)
-                //     .expect("register failed");
-                // node.send("0000").expect("send message error");
                 if let Some(_) = matches.subcommand_matches("register") {
                     match node.register(server, &s_port, &timeout) {
                         Ok(_) => println!("register succeed"),
@@ -91,6 +89,13 @@ fn main() {
                     match node.power_off() {
                         Ok(_) => println!("power off succeed"),
                         Err(_) => println!("power off failed"),
+                    };
+                }
+
+                if let Some(_) = matches.subcommand_matches("disable-psm") {
+                    match node.disable_psm() {
+                        Ok(_) => println!("disable PSM succeed"),
+                        Err(_) => println!("disable PSM failed"),
                     };
                 }
 

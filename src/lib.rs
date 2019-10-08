@@ -157,4 +157,19 @@ impl Node {
             Err(_) => Err(()),
         }
     }
+
+    pub fn disable_psm(&mut self) -> Result<(), ()> {
+        match at_command(&mut self.port, &format!("AT+CPSMS=0\r")) {
+            Ok(res) => {
+                println!("{}", res);
+                let mut lines = res.lines();
+                lines.next();
+                match lines.next() {
+                    Some(s) if s == "OK" => Ok(()),
+                    Some(_) | None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
 }
