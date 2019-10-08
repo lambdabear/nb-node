@@ -9,7 +9,7 @@ fn at_command<'a>(port: &mut Box<dyn serialport::SerialPort>, cmd: &'a str) -> R
         Ok(_) => {
             let mut buffer: Vec<u8> = vec![0; 100];
             let mut res: Vec<u8> = vec![];
-            for _ in 0..10 {
+            for _ in 0..50 {
                 std::thread::sleep(Duration::from_millis(50));
                 match port.read(buffer.as_mut_slice()) {
                     Ok(t) => {
@@ -122,6 +122,36 @@ impl Node {
                 match lines.next() {
                     Some(s) if s == "OK" => Ok(()),
                     Some(_) | None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
+
+    pub fn enable_release_assistance(&mut self) -> Result<(), ()> {
+        match at_command(&mut self.port, &format!("AT+CNBIOTRAI=1\r")) {
+            Ok(res) => {
+                println!("{}", res);
+                let mut lines = res.lines();
+                lines.next();
+                match lines.next() {
+                    Some(s) if s == "OK" => Ok(()),
+                    Some(_) | None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
+
+    pub fn signal_quality(&mut self) -> Result<String, ()> {
+        match at_command(&mut self.port, &format!("AT+CSQ\r")) {
+            Ok(res) => {
+                // println!("{}", res);
+                let mut lines = res.lines();
+                lines.next();
+                match lines.next() {
+                    Some(s) => Ok(s.to_string()),
+                    None => Err(()),
                 }
             }
             Err(_) => Err(()),

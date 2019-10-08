@@ -38,7 +38,9 @@ fn main() {
         .subcommands(vec![
             SubCommand::with_name("register").about("register NB node in CT-iot cloud"),
             SubCommand::with_name("deregister").about("deregister NB node in CT-iot cloud"),
+            SubCommand::with_name("enable-release-assistance").about("enable release assistance"),
             SubCommand::with_name("power-off").about("power off NB node"),
+            SubCommand::with_name("signal-quality").about("signal quality report"),
             SubCommand::with_name("send")
                 .about("send data to CT-iot cloud")
                 .arg(Arg::with_name("data").takes_value(true).required(true)),
@@ -76,10 +78,26 @@ fn main() {
                     };
                 }
 
+                if let Some(_) = matches.subcommand_matches("signal-quality") {
+                    for _ in 0..10 {
+                        match node.signal_quality() {
+                            Ok(s) => println!("{}", s),
+                            Err(_) => println!("test signal quality failed"),
+                        };
+                    }
+                }
+
                 if let Some(_) = matches.subcommand_matches("power-off") {
                     match node.power_off() {
                         Ok(_) => println!("power off succeed"),
                         Err(_) => println!("power off failed"),
+                    };
+                }
+
+                if let Some(_) = matches.subcommand_matches("enable-release-assistance") {
+                    match node.enable_release_assistance() {
+                        Ok(_) => println!("enable release assistance succeed"),
+                        Err(_) => println!("enable release assistance failed"),
                     };
                 }
 
