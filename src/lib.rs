@@ -172,4 +172,52 @@ impl Node {
             Err(_) => Err(()),
         }
     }
+
+    pub fn rssi(&mut self) -> Result<u8, ()> {
+        match at_command(&mut self.port, "AT+CSQ\r") {
+            Ok(res) => {
+                let mut lines = res.lines();
+                lines.next();
+                match lines.next() {
+                    Some(s) => {
+                        if s.len() > 9 {
+                            let rssi = s[6..8].parse::<u8>();
+                            match rssi {
+                                Ok(r) => Ok(r),
+                                Err(_) => Err(()),
+                            }
+                        } else {
+                            Err(())
+                        }
+                    }
+                    None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
+
+    pub fn battery(&mut self) -> Result<u16, ()> {
+        match at_command(&mut self.port, "AT+CBC\r") {
+            Ok(res) => {
+                let mut lines = res.lines();
+                lines.next();
+                match lines.next() {
+                    Some(s) => {
+                        if let Some((i, _)) = s.match_indices(",").next() {
+                            let bat = s[i + 1..].parse::<u16>();
+                            match bat {
+                                Ok(b) => Ok(b),
+                                Err(_) => Err(()),
+                            }
+                        } else {
+                            Err(())
+                        }
+                    }
+                    None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
 }

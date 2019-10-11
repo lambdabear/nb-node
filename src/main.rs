@@ -42,6 +42,8 @@ fn main() {
             SubCommand::with_name("power-off").about("power off NB node"),
             SubCommand::with_name("signal-quality").about("signal quality report"),
             SubCommand::with_name("disable-psm").about("disable us of PSM"),
+            SubCommand::with_name("rssi").about("get NB module's rssi"),
+            SubCommand::with_name("battery").about("get battery voltage(mV)"),
             SubCommand::with_name("send")
                 .about("send data to CT-iot cloud")
                 .arg(Arg::with_name("data").takes_value(true).required(true)),
@@ -82,6 +84,20 @@ fn main() {
                             Ok(s) => println!("{}", s),
                             Err(_) => println!("test signal quality failed"),
                         };
+                    }
+                }
+
+                if let Some(_) = matches.subcommand_matches("rssi") {
+                    match node.rssi() {
+                        Ok(rssi) => println!("RSSI: {}", rssi),
+                        Err(()) => println!("get rssi failed"),
+                    }
+                }
+
+                if let Some(_) = matches.subcommand_matches("battery") {
+                    match node.battery() {
+                        Ok(v) => println!("Battery voltage: {}mV", v),
+                        Err(()) => println!("get battery voltage failed"),
                     }
                 }
 
