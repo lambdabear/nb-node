@@ -1,5 +1,7 @@
 use std::io;
+use std::net::Ipv4Addr;
 use std::str;
+use std::str::FromStr;
 use std::time::Duration;
 
 // use serialport::prelude::*;
@@ -212,6 +214,109 @@ impl Node {
                             }
                         } else {
                             Err(())
+                        }
+                    }
+                    None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
+
+    // check if sim card is ready
+    pub fn sim_ready(&mut self) -> bool {
+        match at_command(&mut self.port, "AT+CPIN?\r") {
+            Ok(res) => {
+                let mut lines = res.lines();
+                match lines.nth(1) {
+                    Some(s) => s == "+CPIN: READY",
+                    None => false,
+                }
+            }
+            Err(_) => false,
+        }
+    }
+
+    // check if PDN is activated
+    pub fn pdn_active(&mut self) -> bool {
+        match at_command(&mut self.port, "AT+CGACT?\r") {
+            Ok(res) => {
+                let mut lines = res.lines();
+                match lines.nth(1) {
+                    Some(s) => match s.match_indices(",").nth(0) {
+                        Some((i, _)) => {
+                            if s.len() > i + 1 {
+                                match s[i + 1..].parse::<u8>() {
+                                    Ok(n) if n == 1 => true,
+                                    _ => false,
+                                }
+                            } else {
+                                false
+                            }
+                        }
+                        None => false,
+                    },
+                    None => false,
+                }
+            }
+            Err(_) => false,
+        }
+    }
+
+    pub fn operator(&mut self) -> Result<String, ()> {
+        match at_command(&mut self.port, "AT+COPS?\r") {
+            Ok(res) => {
+                let mut lines = res.lines();
+                match lines.nth(1) {
+                    Some(s) => {
+                        println!("{}", s);
+                        let mut matches = s.match_indices("\"");
+                        match (matches.next(), matches.next()) {
+                            (Some((i, _)), Some((j, _))) if j - i == 6 => {
+                                Ok(String::from(&s[i + 1..j]))
+                            }
+                            _ => Err(()),
+                        }
+                    }
+                    None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
+
+    pub fn apn_ip_addr(&mut self) -> Result<(String, Ipv4Addr, Ipv4Addr), ()> {
+        match at_command(&mut self.port, "AT+CGCONTRDP\r") {
+            Ok(res) => {
+                let mut lines = res.lines();
+                match lines.nth(1) {
+                    Some(s) => {
+                        let mut quotes_matches = s.match_indices("\"");
+                        let mut dot_matches = s.match_indices(".");
+                        match (
+                            quotes_matches.next(),
+                            quotes_matches.next(),
+                            quotes_matches.next(),
+                            dot_matches.nth(3),
+                            quotes_matches.next(),
+                        ) {
+                            (
+                                Some((i, _)),
+                                Some((j, _)),
+                                Some((k, _)),
+                                Some((l, _)),
+                                Some((m, _)),
+                            ) if j - i < 65 => {
+                                let apn = String::from(&s[i + 1..j]);
+                                match (
+                                    Ipv4Addr::from_str(&s[k + 1..l]),
+                                    Ipv4Addr::from_str(&s[l + 1..m]),
+                                ) {
+                                    (Ok(ip), Ok(mask)) => Ok((apn, ip, mask)),
+                                    _ => Err(()),
+                                }
+                            }
+                            _ => Err(()),
                         }
                     }
                     None => Err(()),

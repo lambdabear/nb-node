@@ -44,6 +44,10 @@ fn main() {
             SubCommand::with_name("disable-psm").about("disable us of PSM"),
             SubCommand::with_name("rssi").about("get NB module's rssi"),
             SubCommand::with_name("battery").about("get battery voltage(mV)"),
+            SubCommand::with_name("sim-ready").about("check if sim card is ready"),
+            SubCommand::with_name("pdn-active").about("check if PDN is activated"),
+            SubCommand::with_name("operator").about("get operator's numeric format"),
+            SubCommand::with_name("apn-ip").about("get apn and ip address"),
             SubCommand::with_name("send")
                 .about("send data to CT-iot cloud")
                 .arg(Arg::with_name("data").takes_value(true).required(true)),
@@ -98,6 +102,28 @@ fn main() {
                     match node.battery() {
                         Ok(v) => println!("Battery voltage: {}mV", v),
                         Err(()) => println!("get battery voltage failed"),
+                    }
+                }
+
+                if let Some(_) = matches.subcommand_matches("sim-ready") {
+                    println!("sim card is ready: {}", node.sim_ready());
+                }
+
+                if let Some(_) = matches.subcommand_matches("pdn-active") {
+                    println!("PDN is activated: {}", node.pdn_active());
+                }
+
+                if let Some(_) = matches.subcommand_matches("operator") {
+                    match node.operator() {
+                        Ok(s) => println!("operator: {}", s),
+                        Err(_) => println!("get operator failed"),
+                    }
+                }
+
+                if let Some(_) = matches.subcommand_matches("apn-ip") {
+                    match node.apn_ip_addr() {
+                        Ok((apn, ip, mask)) => println!("apn: {}, ip: {}, mask: {}", apn, ip, mask),
+                        Err(_) => println!("get apn and ip address failed"),
                     }
                 }
 
