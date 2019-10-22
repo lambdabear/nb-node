@@ -325,4 +325,32 @@ impl Node {
             Err(_) => Err(()),
         }
     }
+
+    // close net light
+    pub fn close_net_light(&mut self) -> Result<(), ()> {
+        match at_command(&mut self.port, "AT+CNETLIGHT=0\r") {
+            Ok(res) => {
+                let mut lines = res.lines();
+                match lines.nth(1) {
+                    Some(s) if s == "OK" => Ok(()),
+                    Some(_) | None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
+
+    // open net light to shining
+    pub fn open_net_light(&mut self) -> Result<(), ()> {
+        match at_command(&mut self.port, "AT+CNETLIGHT=1\r") {
+            Ok(res) => {
+                let mut lines = res.lines();
+                match lines.nth(1) {
+                    Some(s) if s == "OK" => Ok(()),
+                    Some(_) | None => Err(()),
+                }
+            }
+            Err(_) => Err(()),
+        }
+    }
 }

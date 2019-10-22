@@ -48,6 +48,8 @@ fn main() {
             SubCommand::with_name("pdn-active").about("check if PDN is activated"),
             SubCommand::with_name("operator").about("get operator's numeric format"),
             SubCommand::with_name("apn-ip").about("get apn and ip address"),
+            SubCommand::with_name("close-net-light").about("close net light"),
+            SubCommand::with_name("open-net-light").about("open net light"),
             SubCommand::with_name("send")
                 .about("send data to CT-iot cloud")
                 .arg(Arg::with_name("data").takes_value(true).required(true)),
@@ -153,6 +155,20 @@ fn main() {
                     match node.send(data) {
                         Ok(_) => println!("sending data succeed"),
                         Err(_) => println!("sending data failed"),
+                    };
+                }
+
+                if let Some(_) = matches.subcommand_matches("close-net-light") {
+                    match node.close_net_light() {
+                        Ok(_) => println!("close net light succeed"),
+                        Err(_) => println!("close net light failed"),
+                    };
+                }
+
+                if let Some(_) = matches.subcommand_matches("open-net-light") {
+                    match node.open_net_light() {
+                        Ok(_) => println!("open net light succeed"),
+                        Err(_) => println!("open net light failed"),
                     };
                 }
             }
