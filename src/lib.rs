@@ -42,7 +42,7 @@ impl Node {
     pub fn new(mut port: Box<dyn serialport::SerialPort>) -> Result<Self, ()> {
         match at_command(&mut port, "AT+GSN\r") {
             Ok(s) => {
-                println!("{}", s);
+                // println!("{}", s);
                 let mut lines = s.lines();
                 lines.next();
                 match lines.next() {
