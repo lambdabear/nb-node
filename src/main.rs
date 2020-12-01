@@ -20,19 +20,45 @@ fn main() {
     match serialport::open_with_settings(&serial_dev, &settings) {
         Ok(port) => match Node::new(port) {
             Ok(mut node) => {
-                println!("create NB module succeed! imei: {}", node.get_imei());
+                println!("Create NB module succeed! imei: {}", node.get_imei());
+                if node.sim_ready() {
+                    println!("SIM card is ready.");
+                } else {
+                    println!("No SIM card detected!");
+                    sleep(Duration::from_secs(1));
+                }
+
+                for _ in 0..5 {
+                    match node.rssi() {
+                        Ok(rssi) => println!("RSSI: {}", rssi),
+                        Err(()) => println!("Get RSSI failed!"),
+                    }
+                    sleep(Duration::from_secs(1));
+                };
+
+                if node.pdn_active() {
+                    println!("PDN is activated.");
+                } else {
+                    println!("PDN is not activated!");
+                    sleep(Duration::from_secs(1));
+                }
+
+                match node.apn_ip_addr() {
+                    Ok((apn, ip, mask)) => println!("APN: {}, IP: {}, Mask: {}", apn, ip, mask),
+                    Err(_) => println!("Get APN and ip address failed!"),
+                }
                 
                 loop {
                     match node.rssi() {
                         Ok(rssi) => println!("RSSI: {}", rssi),
-                        Err(()) => println!("get rssi failed"),
+                        Err(()) => println!("Get RSSI failed!"),
                     }
                     sleep(Duration::from_secs(1));
                 }
 
             }
-            Err(_) => println!("creat nb node error"),
+            Err(_) => println!("Creat nb node error!"),
         },
-        Err(_) => println!("open serial port error"),
+        Err(_) => println!("Open serial port error!"),
     }
 }
